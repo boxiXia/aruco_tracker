@@ -38,6 +38,8 @@ or implied, of Rafael Muñoz Salinas.
 #include <string>
 #include <thread>
 #include <map>
+#include <algorithm>
+#include <random>
  namespace aruco{
  //Class using an opencv window to render and manipulate a sgl scene
  class sgl_OpenCV_Viewer  {
@@ -58,6 +60,7 @@ or implied, of Rafael Muñoz Salinas.
      cv::Mat _resizedInImage;
      cv::Mat _camPose;
      bool followCamera=false;
+     std::default_random_engine rng = std::default_random_engine{};
  public:
 
 
@@ -382,7 +385,9 @@ std::vector<sgl::Point3> sgl_OpenCV_Viewer::getMarkerIdPcd(aruco::Marker3DInfo &
     //select only a fraction of them number of them
     if(perct!=1){
         int n_used=float(points_id.size())*(perct);
-        std::random_shuffle(points_id.begin(),points_id.end());
+        //std::random_shuffle(points_id.begin(),points_id.end());
+        
+        std::shuffle(points_id.begin(), points_id.end(), rng);
         points_id.resize( n_used);
     }
 

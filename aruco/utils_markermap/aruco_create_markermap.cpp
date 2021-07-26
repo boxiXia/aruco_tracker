@@ -35,7 +35,8 @@ or implied, of Rafael Muñoz Salinas.
 #include <opencv2/highgui/highgui.hpp>
 #include <string>
 #include <stdexcept>
-
+#include <algorithm>
+#include <random>
 using namespace std;
 
 class CmdLineParser
@@ -103,9 +104,12 @@ int main(int argc, char** argv)
         if ( ids.size()==0){//no one specified, use random ones
             for (auto d : Dict.getMapCode())
                 ids.push_back(d.second);
-            // random shuffle
-            srand(rand_seed);
-            std::random_shuffle(ids.begin(), ids.end());
+            //// random shuffle
+            //srand(rand_seed);
+            //std::random_shuffle(ids.begin(), ids.end());
+            auto rng = std::default_random_engine{};
+            rng.seed(rand_seed);
+            std::shuffle(ids.begin(), ids.end(), rng);
             cout<<ids.size()<<endl;
             ids.resize(XSize* YSize);
         }
