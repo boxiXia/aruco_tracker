@@ -224,7 +224,9 @@ int main(int argc, char** argv)
 		float TheMarkerSize = 0.037;// marker size
 		float resize_factor = 1; //resize factor
 		std::string camera_params_path = "camera_params.yml"; //camera paramerter path
-		std::string  dictionaryString = "ARUCO_MIP_36h12";
+		std::string  dictionaryString = "ARUCO_MIP_25h7";
+		std::string arucoconfig_path = "arucoConfig.yml";
+
 		bool help = false;
 		{
 			using namespace clipp;//https://github.com/muellan/clipp
@@ -233,7 +235,8 @@ int main(int argc, char** argv)
 				option("-s").doc("set marker size [m]") & value("marker_size_in_meters", TheMarkerSize),
 				option("-c").doc("read [camera_params.yml]") & value("camera_params.yml", camera_params_path),
 				option("-d").doc("set dictionary") & value("dictionary", dictionaryString),
-				option("-rf").doc("set resize factor") & value("resize_factor", resize_factor)
+				option("-rf").doc("set resize factor") & value("resize_factor", resize_factor),
+				option("-config").doc("Load detector configuration file") & value("arucoConfig.yml", arucoconfig_path)
 				)
 				| option("-h", "--help").doc("show help").set(help, true)
 				);
@@ -250,6 +253,8 @@ int main(int argc, char** argv)
 			printf("camera_params:%s\n", camera_params_path.c_str());
 			printf("marker dictionary:%s\n", dictionaryString.c_str());
 			printf("resize_factor %f\n", resize_factor);
+			printf("detector configuration file %s\n", arucoconfig_path.c_str());
+
 		}
 
 		TheCameraParameters.readFromXMLFile(camera_params_path);
@@ -287,10 +292,18 @@ int main(int argc, char** argv)
 		TheVideoCapturer >> TheInputImage;
 		if (TheCameraParameters.isValid())
 			TheCameraParameters.resize(TheInputImage.size());
+
+
 		iDictionaryIndex = (uint64_t)aruco::Dictionary::getTypeFromString(dictionaryString);
 		MDetector.setDictionary(dictionaryString, float(iCorrectionRate) / 10.); // sets the dictionary to be employed (ARUCO,APRILTAGS,ARTOOLKIT,etc)
+
+		//MDetector.loadParamsFromFile(arucoconfig_path);
+
 		iThreshold = MDetector.getParameters().ThresHold;
 		iCornerMode = MDetector.getParameters().cornerRefinementM;
+
+		
+
 
 		setParamsFromGlobalVariables(MDetector);
 

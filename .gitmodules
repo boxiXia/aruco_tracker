@@ -1,0 +1,3 @@
+[submodule "aruco"]
+	path = aruco
+	url = git@github.com:boxiXia/aruco.git

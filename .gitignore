@@ -34,3 +34,5 @@
 .vs/
 
 bin/
+
+img/.ipynb_checkpoints/

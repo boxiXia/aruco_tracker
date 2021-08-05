@@ -15,10 +15,15 @@ find_package(OpenCV REQUIRED)
 # find_package(GLEW REQUIRED)
 # find_package(glfw3 CONFIG REQUIRED)
 # find_package(imgui CONFIG REQUIRED) # GUI
-# find_package(msgpack CONFIG REQUIRED)
+find_package(msgpack CONFIG REQUIRED)
 find_package(clipp CONFIG REQUIRED)
 #find_package(asio CONFIG REQUIRED)
 #find_package(ghc_filesystem CONFIG REQUIRED)
+
+
+find_package(cppzmq CONFIG REQUIRED) # for networking
+
+find_package(asio CONFIG REQUIRED)
 
 set(USE_OWN_EIGEN3 off)
 
@@ -51,11 +56,19 @@ add_executable(app_test_markermap
 		aruco_test_markermap.cpp 
 		aruco/utils_markermap/pcdwriter.cpp 
 		aruco/utils_markermap/sglviewer.h aruco/utils_markermap/sgl.h)
-target_link_libraries(app_test_markermap aruco ${OpenCV_LIBRARIES} ${THREADLIB})
+target_link_libraries(app_test_markermap aruco clipp::clipp ${OpenCV_LIBRARIES} ${THREADLIB} asio asio::asio msgpackc msgpackc-cxx)
 
 
-add_executable(aruco_print_dictionary aruco/utils/aruco_print_dictionary.cpp)
-target_link_libraries(aruco_print_dictionary aruco ${OpenCV_LIBRARIES} ${THREADLIB})
+add_executable(aruco_print_dictionary aruco_print_dictionary.cpp)
+target_link_libraries(aruco_print_dictionary aruco clipp::clipp ${OpenCV_LIBRARIES} ${THREADLIB})
 
-add_executable(aruco_print_marker aruco/utils/aruco_print_marker.cpp)
-target_link_libraries(aruco_print_marker aruco ${OpenCV_LIBRARIES} ${THREADLIB})
+
+
+add_executable(       zmq_publisher  publisher.cpp  message.hpp)
+target_link_libraries(zmq_publisher  cppzmq cppzmq-static msgpackc msgpackc-cxx)
+
+add_executable(       zmq_subscriber subscriber.cpp message.hpp)
+target_link_libraries(zmq_subscriber cppzmq cppzmq-static msgpackc msgpackc-cxx)
+
+add_executable(testasio testasio.cpp)
+target_link_libraries(testasio PRIVATE asio asio::asio msgpackc msgpackc-cxx)
