@@ -39,6 +39,7 @@ or implied, of Rafael Mu�oz Salinas.
 #include <sstream>
 #include <string>
 #include <stdexcept>
+#include <clipp.h>
 
 #if CV_MAJOR_VERSION >= 4
 #define CV_CAP_PROP_FRAME_COUNT cv::CAP_PROP_FRAME_COUNT
@@ -56,39 +57,14 @@ VideoCapture TheVideoCapturer;
 vector<Marker> TheMarkers;
 Mat TheInputImage, TheInputImageGrey, TheInputImageCopy;
 CameraParameters TheCameraParameters;
-void cvTackBarEvents(int pos, void *);
+void cvTackBarEvents(int pos, void*);
 string dictionaryString;
 int iDetectMode = 0, iMinMarkerSize = 0, iCorrectionRate = 0, iShowAllCandidates = 0, iEnclosed = 0, iThreshold, iCornerMode, iDictionaryIndex, iTrack = 1;
 
 int waitTime = 0;
 bool showMennu = false, bPrintHelp = false, isVideo = false;
-class CmdLineParser
-{
-	int argc;
-	char **argv;
 
-public:
-	CmdLineParser(int _argc, char **_argv) : argc(_argc), argv(_argv) {}
-	bool operator[](string param)
-	{
-		int idx = -1;
-		for (int i = 0; i < argc && idx == -1; i++)
-			if (string(argv[i]) == param)
-				idx = i;
-		return (idx != -1);
-	}
-	string operator()(string param, string defvalue = "-1")
-	{
-		int idx = -1;
-		for (int i = 0; i < argc && idx == -1; i++)
-			if (string(argv[i]) == param)
-				idx = i;
-		if (idx == -1)
-			return defvalue;
-		else
-			return (argv[idx + 1]);
-	}
-};
+
 struct TimerAvrg
 {
 	std::vector<double> times;
@@ -125,7 +101,7 @@ struct TimerAvrg
 
 TimerAvrg Fps;
 
-cv::Mat resize(const cv::Mat &in, cv::Size s)
+cv::Mat resize(const cv::Mat& in, cv::Size s)
 {
 	if (s.width == -1 || s.height == -1)
 		return in;
@@ -134,7 +110,7 @@ cv::Mat resize(const cv::Mat &in, cv::Size s)
 	return im2;
 }
 
-cv::Mat resize(const cv::Mat &in, int width)
+cv::Mat resize(const cv::Mat& in, int width)
 {
 	if (in.size().width <= width)
 		return in;
@@ -143,7 +119,7 @@ cv::Mat resize(const cv::Mat &in, int width)
 	cv::resize(in, im2, cv::Size(width, static_cast<int>(in.size().height * yf)));
 	return im2;
 }
-cv::Mat resizeImage(cv::Mat &in, float resizeFactor)
+cv::Mat resizeImage(cv::Mat& in, float resizeFactor)
 {
 	if (fabs(1 - resizeFactor) < 1e-3)
 		return in;
@@ -160,7 +136,7 @@ cv::Mat resizeImage(cv::Mat &in, float resizeFactor)
 *
 *
 ************************************/
-void setParamsFromGlobalVariables(aruco::MarkerDetector &md)
+void setParamsFromGlobalVariables(aruco::MarkerDetector& md)
 {
 
 	md.setDetectionMode((DetectionMode)iDetectMode, float(iMinMarkerSize) / 1000.);
@@ -189,7 +165,7 @@ void createMenu()
 	iCornerMode = MDetector.getParameters().cornerRefinementM;
 }
 
-void putText(cv::Mat &im, string text, cv::Point p, float size)
+void putText(cv::Mat& im, string text, cv::Point p, float size)
 {
 	float fact = float(im.cols) / float(640);
 	if (fact < 1)
@@ -198,7 +174,7 @@ void putText(cv::Mat &im, string text, cv::Point p, float size)
 	cv::putText(im, text, p, FONT_HERSHEY_SIMPLEX, size, cv::Scalar(0, 0, 0), 3 * fact);
 	cv::putText(im, text, p, FONT_HERSHEY_SIMPLEX, size, cv::Scalar(125, 255, 255), 1 * fact);
 }
-void printHelp(cv::Mat &im)
+void printHelp(cv::Mat& im)
 {
 	float fs = float(im.cols) / float(1200);
 
@@ -209,7 +185,7 @@ void printHelp(cv::Mat &im)
 	putText(im, "'f': saves current configuration to file 'arucoConfig.yml'", cv::Point(10, fs * 140), fs * 0.5f);
 }
 
-void printInfo(cv::Mat &im)
+void printInfo(cv::Mat& im)
 {
 	float fs = float(im.cols) / float(1200);
 	putText(im, "fps=" + to_string(1. / Fps.getAvrg()), cv::Point(10, fs * 20), fs * 0.5f);
@@ -229,7 +205,6 @@ void printMenuInfo()
 	str = "Detection Mode=" + MarkerDetector::Params::toString(MDetector.getParameters().detectMode);
 	cv::putText(image, str, cv::Size(10, 40), FONT_HERSHEY_SIMPLEX, 0.35, cv::Scalar(0, 0, 0), 1);
 	str = "Corner Mode=" + MarkerDetector::Params::toString(MDetector.getParameters().cornerRefinementM);
-	;
 	cv::putText(image, str, cv::Size(10, 60), FONT_HERSHEY_SIMPLEX, 0.35, cv::Scalar(0, 0, 0), 1);
 	cv::imshow("menu", image);
 }
@@ -240,63 +215,49 @@ void printMenuInfo()
 *
 *
 ************************************/
-cv::Size parseSize(const string &strsize)
-{
-	if (strsize.size() == 0)
-		return cv::Size(-1, -1);
-	cv::Size s;
-	string ssaux = strsize;
-	for (auto &c : ssaux)
-	{
-		if (c == ':')
-		{
-			c = ' ';
-		}
-	}
-	stringstream sstr;
-	sstr << ssaux;
-	if (sstr >> s.width >> s.height)
-		return s;
-	return cv::Size(-1, -1);
-}
-int main(int argc, char **argv)
+
+int main(int argc, char** argv)
 {
 	try
 	{
-		CmdLineParser cml(argc, argv);
-		if (cml["-h"])
+		int vIdx = 0;// camera index
+		float TheMarkerSize = 0.037;// marker size
+		float resize_factor = 1; //resize factor
+		std::string camera_params_path = "camera_params.yml"; //camera paramerter path
+		std::string  dictionaryString = "ARUCO_MIP_36h12";
+		bool help = false;
 		{
-			cerr << "Usage: -i camera_index(e.g 0 or 1) [-c camera_params.yml] [-s  marker_size_in_meters] [-d "
-					"dictionary:ALL_DICTS by default] [-h] [-ws w:h] [-skip frames]"
-				 << endl;
-			cerr << "\tDictionaries: ";
-			for (auto dict : aruco::Dictionary::getDicTypes())
-				cerr << dict << " ";
-			cerr << endl;
-			cerr << "\t Instead of these, you can directly indicate the path to a file with your own generated "
-					"dictionary"
-				 << endl;
-			return false;
+			using namespace clipp;//https://github.com/muellan/clipp
+			auto cli = ((
+				option("-i").doc("set camera_index(e.g 0 or 1)") & value("camera_index", vIdx),
+				option("-s").doc("set marker size [m]") & value("marker_size_in_meters", TheMarkerSize),
+				option("-c").doc("read [camera_params.yml]") & value("camera_params.yml", camera_params_path),
+				option("-d").doc("set dictionary") & value("dictionary", dictionaryString),
+				option("-rf").doc("set resize factor") & value("resize_factor", resize_factor)
+				)
+				| option("-h", "--help").doc("show help").set(help, true)
+				);
+
+			if (!parse(argc, argv, cli) || help) {
+				std::cout << make_man_page(cli, argv[0]);
+				cerr << "Dictionaries: ";
+				for (auto dict : aruco::Dictionary::getDicTypes())
+					cerr << dict << " ";
+				return 0;
+			}
+			printf("camera index: %d\n", vIdx);
+			printf("marker size[m]:%f\n", TheMarkerSize);
+			printf("camera_params:%s\n", camera_params_path.c_str());
+			printf("marker dictionary:%s\n", dictionaryString.c_str());
+			printf("resize_factor %f\n", resize_factor);
 		}
 
-		///////////  PARSE ARGUMENTS
-		
-		//// read camera parameters if passed
-		//if (cml["-c"])
-		//	TheCameraParameters.readFromXMLFile(cml("-c"));
-		TheCameraParameters.readFromXMLFile(cml("-c","camera_params.yml"));
+		TheCameraParameters.readFromXMLFile(camera_params_path);
 
-		//float TheMarkerSize = std::stof(cml("-s", "-1"));
-		float TheMarkerSize = std::stof(cml("-s", "0.037"));
-
-		//resize factor
-		float resizeFactor = std::stof(cml("-rf", "1"));
-
-		iMinMarkerSize = std::stof(cml("-mms", "0.0"));
 
 		///////////  OPEN VIDEO
 		// read from camera or from  file
-		int vIdx = std::stoi(cml("-i", "0")); //camera id
+		//vIdx = std::stoi(cml("-i", "0")); //camera id
 		cout << "Opening camera index " << vIdx << endl;
 
 		std::vector<int> params = {
@@ -312,41 +273,20 @@ int main(int argc, char **argv)
 		waitTime = 1;
 		isVideo = true;
 
-
 		// check video is open
 		if (!TheVideoCapturer.isOpened())
 			throw std::runtime_error("Could not open video");
 
-		//create windows
-		if (cml["-fs"])
-		{
-			cv::namedWindow("in", cv::WINDOW_FULLSCREEN);
-			cv::namedWindow("thres", cv::WINDOW_FULLSCREEN);
-		}
-		else if (cml["-ws"])
-		{
-			cv::namedWindow("in", cv::WINDOW_NORMAL);
-			cv::Size s = parseSize(cml("-ws"));
-			cv::resizeWindow("in", s.width, s.height);
-			cv::namedWindow("thres", cv::WINDOW_NORMAL);
-			resizeWindow("thres", s.width, s.height);
-		}
-
-		else
-		{
-			cv::namedWindow("in", cv::WINDOW_NORMAL);
-			cv::resizeWindow("in", 1920, 1080);
-			float w = std::min(int(1920), int(TheInputImage.cols));
-			float f = w / float(TheInputImage.cols);
-			resizeWindow("in", w, float(TheInputImage.rows) * f);
-		}
+		////create windows
+		cv::namedWindow("in", cv::WINDOW_NORMAL);
+		cv::resizeWindow("in", 1920, 1080);
+		cv::namedWindow("thres", cv::WINDOW_NORMAL);
 
 		///// CONFIGURE DATA
 		// read first image to get the dimensions
 		TheVideoCapturer >> TheInputImage;
 		if (TheCameraParameters.isValid())
 			TheCameraParameters.resize(TheInputImage.size());
-		dictionaryString = cml("-d", "ARUCO_MIP_36h12");
 		iDictionaryIndex = (uint64_t)aruco::Dictionary::getTypeFromString(dictionaryString);
 		MDetector.setDictionary(dictionaryString, float(iCorrectionRate) / 10.); // sets the dictionary to be employed (ARUCO,APRILTAGS,ARTOOLKIT,etc)
 		iThreshold = MDetector.getParameters().ThresHold;
@@ -361,18 +301,17 @@ int main(int argc, char **argv)
 
 		do
 		{
-
 			TheVideoCapturer.retrieve(TheInputImage);
 			//std::cout << "Frame:" << TheVideoCapturer.get(CV_CAP_PROP_POS_FRAMES) << std::endl;
-			TheInputImage = resizeImage(TheInputImage, resizeFactor);
+			TheInputImage = resizeImage(TheInputImage, resize_factor);
 			// copy image
 			Fps.start();
 			TheMarkers = MDetector.detect(TheInputImage, TheCameraParameters, TheMarkerSize);
-			
+
 			for (auto& marker : TheMarkers)  // for each marker
 				MTracker[marker.id].estimatePose(marker, TheCameraParameters, TheMarkerSize);  // call its tracker and estimate the pose
 
-			
+
 			Fps.stop();
 			//// chekc the speed by calculating the mean speed of all iterations
 			//cout << "\rTime detection=" << Fps.getAvrg()*1000 << " milliseconds nmarkers=" << TheMarkers.size() <<" images resolution="<<TheInputImage.size() <<std::endl;
@@ -391,7 +330,7 @@ int main(int argc, char **argv)
 			for (unsigned int i = 0; i < TheMarkers.size(); i++)
 			{
 				//cout << TheMarkers[i] << endl;
-				TheMarkers[i].draw(TheInputImageCopy, Scalar(0, 0, 255), 2, true);
+				TheMarkers[i].draw(TheInputImageCopy, Scalar(0, 0, 255), 2, true, false);
 			}
 
 			// draw a 3d cube in each marker if there is 3d info
@@ -406,7 +345,7 @@ int main(int argc, char **argv)
 				}
 
 			// DONE! Easy, right?
-			// show input with augmented information and  the thresholded image
+			// show input with augmented information and the thresholded image
 			printInfo(TheInputImageCopy);
 			if (showMennu)
 				printMenuInfo();
@@ -473,14 +412,14 @@ int main(int argc, char **argv)
 					key = 27;
 		} while (key != 27);
 	}
-	catch (std::exception &ex)
+	catch (std::exception& ex)
 
 	{
 		cout << "Exception :" << ex.what() << endl;
 	}
 }
 
-void cvTackBarEvents(int pos, void *)
+void cvTackBarEvents(int pos, void*)
 {
 	(void)(pos);
 

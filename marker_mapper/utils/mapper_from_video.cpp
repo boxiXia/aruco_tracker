@@ -76,7 +76,7 @@ int main(int argc,char **argv){
         for(auto vfile:videos){
             cv::Mat image,image2,img_resized;
             cv::VideoCapture vcap;
-            if (string(argv[1])=="live") vcap.open(0);
+            if (string(argv[1])=="live") vcap.open(0, cv::CAP_DSHOW);
             else vcap.open(vfile);
             if (!vcap.isOpened()){cerr<<"Could not open input"<<endl;return -1;}
             //wait until valid images came

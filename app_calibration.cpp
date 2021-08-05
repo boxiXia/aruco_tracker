@@ -89,7 +89,7 @@ int main(int argc, char** argv)
         std::string out_path = cml("-o", "camera_params.yml");
 
          // read from camera
-        int vIdx = std::stoi(cml("-in", "1"));
+        int vIdx = std::stoi(cml("-in", "0"));
         std::vector<int> params = {
             // https://docs.opencv.org/4.5.3/d4/d15/group__videoio__flags__base.html
             cv::CAP_PROP_FRAME_WIDTH,1920,
