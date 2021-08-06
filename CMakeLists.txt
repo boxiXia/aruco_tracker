@@ -21,7 +21,7 @@ find_package(clipp CONFIG REQUIRED)
 #find_package(ghc_filesystem CONFIG REQUIRED)
 
 
-find_package(cppzmq CONFIG REQUIRED) # for networking
+#find_package(cppzmq CONFIG REQUIRED) # for networking
 
 find_package(asio CONFIG REQUIRED)
 
@@ -64,11 +64,11 @@ target_link_libraries(aruco_print_dictionary aruco clipp::clipp ${OpenCV_LIBRARI
 
 
 
-add_executable(       zmq_publisher  publisher.cpp  message.hpp)
-target_link_libraries(zmq_publisher  cppzmq cppzmq-static msgpackc msgpackc-cxx)
+#add_executable(       zmq_publisher  publisher.cpp  message.hpp)
+#target_link_libraries(zmq_publisher  cppzmq cppzmq-static msgpackc msgpackc-cxx)
 
-add_executable(       zmq_subscriber subscriber.cpp message.hpp)
-target_link_libraries(zmq_subscriber cppzmq cppzmq-static msgpackc msgpackc-cxx)
+#add_executable(       zmq_subscriber subscriber.cpp message.hpp)
+#target_link_libraries(zmq_subscriber cppzmq cppzmq-static msgpackc msgpackc-cxx)
 
 add_executable(testasio testasio.cpp)
 target_link_libraries(testasio PRIVATE asio asio::asio msgpackc msgpackc-cxx)

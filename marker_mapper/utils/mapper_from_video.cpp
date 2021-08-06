@@ -73,10 +73,20 @@ int main(int argc,char **argv){
 
         auto videos=parseVideoFiles(argv[1]);
 
+        std::vector<int> params = {
+            // https://docs.opencv.org/4.5.3/d4/d15/group__videoio__flags__base.html
+            cv::CAP_PROP_FRAME_WIDTH,1920,
+            cv::CAP_PROP_FRAME_HEIGHT,1080,
+            cv::CAP_PROP_FPS,120,
+            //cv::CAP_PROP_EXPOSURE,-8,
+            //cv::CAP_PROP_GAIN,250,
+            //cv::CAP_PROP_BRIGHTNESS,100,
+        };
+
         for(auto vfile:videos){
             cv::Mat image,image2,img_resized;
             cv::VideoCapture vcap;
-            if (string(argv[1])=="live") vcap.open(0, cv::CAP_DSHOW);
+            if (string(argv[1])=="live") vcap.open(0, cv::CAP_DSHOW, params);
             else vcap.open(vfile);
             if (!vcap.isOpened()){cerr<<"Could not open input"<<endl;return -1;}
             //wait until valid images came
