@@ -53,9 +53,6 @@ aruco::MarkerDetector TheMarkerDetector;
 aruco::MarkerMapPoseTracker TheMSPoseTracker;
 //aruco::sgl_OpenCV_Viewer viewer;
 
-
-
-
 class Camera {
 public:
     cv::VideoCapture cap;
@@ -63,8 +60,8 @@ public:
         int index = 1,
         std::vector<int> params = {
             // https://docs.opencv.org/4.5.3/d4/d15/group__videoio__flags__base.html
-            cv::CAP_PROP_FRAME_WIDTH, 1920,
-            cv::CAP_PROP_FRAME_HEIGHT, 1080,
+            cv::CAP_PROP_FRAME_WIDTH, 2560,
+            cv::CAP_PROP_FRAME_HEIGHT, 1440,
             cv::CAP_PROP_FPS, 200,
             cv::CAP_PROP_EXPOSURE, -7,
             cv::CAP_PROP_GAIN, 200,
@@ -129,7 +126,7 @@ private:
 
 class DisplayHelper {
 public:
-    
+
     aruco::MarkerMap marker_map;
     cv::Mat input_image; // should update every time
     cv::Mat rt_matrix; // should uipdate every time
@@ -141,7 +138,7 @@ public:
     float marker_size;
     DisplayHelper(float marker_size, aruco::MarkerMap marker_map) {
         this->marker_size = marker_size;
-        this -> marker_map = marker_map;
+        this->marker_map = marker_map;
         update_thread = std::thread(&DisplayHelper::update, this);
     }
     ~DisplayHelper() {
@@ -175,6 +172,9 @@ private:
 };
 
 
+
+
+
 int main(int argc, char** argv)
 {
     try
@@ -182,6 +182,7 @@ int main(int argc, char** argv)
         int waitTime = 1;
         int vIdx = 0;// camera index
         float TheMarkerSize = 0.03;// marker size
+        // defualt values
         std::string camera_params_path = "camera_params.yml"; //camera paramerter path
         std::string markermapconfig_path = "markerset.yml";
         std::string arucoconfig_path = "arucoConfig.yml";
@@ -230,7 +231,7 @@ int main(int argc, char** argv)
         socket.open(asio::ip::udp::v4());
 
 
-        TheMarkerMapConfig.readFromFile(markermapconfig_path);
+        
 
         Camera TheVideoCapturer(vIdx);
         //// read first image to get the dimensions
@@ -240,9 +241,12 @@ int main(int argc, char** argv)
         TheCameraParameters.readFromXMLFile(camera_params_path);
         TheCameraParameters.resize(TheInputImage.size());
         // prepare the detector
+        TheMarkerDetector.loadParamsFromFile(arucoconfig_path);
+
+        TheMarkerMapConfig.readFromFile(markermapconfig_path);
         TheMarkerDetector.setDictionary( TheMarkerMapConfig.getDictionary());
 
-        TheMarkerDetector.loadParamsFromFile(arucoconfig_path);
+        
 
         // prepare the pose tracker if possible
         // if the camera parameers are avaiable, and the markerset can be expressed in meters, then go
@@ -331,3 +335,5 @@ void  getQuaternionAndTranslationfromMatrix44(const cv::Mat &M_in ,double &qx,do
     ty=M.at<double>(1,3);
     tz=M.at<double>(2,3);
 }
+
+

@@ -92,12 +92,12 @@ int main(int argc, char** argv)
         int vIdx = std::stoi(cml("-in", "0"));
         std::vector<int> params = {
             // https://docs.opencv.org/4.5.3/d4/d15/group__videoio__flags__base.html
-            cv::CAP_PROP_FRAME_WIDTH,1920,
-            cv::CAP_PROP_FRAME_HEIGHT,1080,
-            cv::CAP_PROP_FPS,120,
-            cv::CAP_PROP_EXPOSURE,-6,
-            cv::CAP_PROP_GAIN,100,
-            cv::CAP_PROP_BRIGHTNESS,100,
+            cv::CAP_PROP_FRAME_WIDTH, 2560,
+            cv::CAP_PROP_FRAME_HEIGHT, 1440,
+            cv::CAP_PROP_FPS, 200,
+            cv::CAP_PROP_EXPOSURE, -7,
+            cv::CAP_PROP_GAIN, 200,
+            cv::CAP_PROP_BRIGHTNESS, 100,
         };
         TheVideoCapturer.open(vIdx, cv::CAP_DSHOW, params);
         isLive = true;
@@ -139,9 +139,9 @@ int main(int argc, char** argv)
                 m.draw(TheInputImage, Scalar(0, 0, 255), 1);
 
             // draw help
-            cv::putText(TheInputImage,"'a' add current image for calibration",cv::Point(10,20),FONT_HERSHEY_SIMPLEX, 0.5f,cv::Scalar(125,255,255),1);
-            cv::putText(TheInputImage,"'s' start/stop capture",cv::Point(10,40),FONT_HERSHEY_SIMPLEX, 0.5f,cv::Scalar(125,255,255),1);
-            cv::putText(TheInputImage,calibrator.getInfo(),cv::Point(10,60),FONT_HERSHEY_SIMPLEX, 0.5f,cv::Scalar(125,255,255),1);
+            cv::putText(TheInputImage,"'a' add current image for calibration",cv::Point(10,20),FONT_HERSHEY_SIMPLEX, 1.f,cv::Scalar(125,255,255),1);
+            cv::putText(TheInputImage,"'s' start/stop capture",cv::Point(10,40),FONT_HERSHEY_SIMPLEX, 1.f,cv::Scalar(125,255,255),1);
+            cv::putText(TheInputImage,calibrator.getInfo(),cv::Point(10,60),FONT_HERSHEY_SIMPLEX, 1.f,cv::Scalar(125,255,255),1);
             cv::imshow("in", TheInputImage);
 
              key = cv::waitKey(waitKeyTime);   // wait for key to be pressed

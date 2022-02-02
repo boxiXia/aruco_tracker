@@ -2,7 +2,7 @@
 helper to move the center of mass position to origin
 """
 import open3d as o3d
-import open3d.visualization.gui as gui
+# import open3d.visualization.gui as gui
 
 import numpy as np
 
@@ -31,6 +31,7 @@ def arucoTest(path,gui=True):
     with open(path,mode='r') as file:
         file_str = file.read()
         file_str_fixed = re.sub(":+ |:",": ",file_str)
+        file_str_fixed = re.sub("YAML: 1.0","YAML 1.0",file_str_fixed)
     # check if file need fixing
     # opencv does not exactly follow the yaml convention,
     # so may need to replace ":" with ": "
@@ -48,8 +49,8 @@ def arucoTest(path,gui=True):
     for m in markers:
         m.corners -= com_pos
 
-    if gui:
-        app = gui.Application.instance
+    if gui==True:
+        app = o3d.visualization.gui.Application.instance
         app.initialize()
         vis = o3d.visualization.O3DVisualizer("Open3D - 3D Text", 1024, 768)
         
@@ -73,7 +74,7 @@ def arucoTest(path,gui=True):
     body = "\n".join([f"{key}: {item}" if key!= 'aruco_bc_markers' else f"{key}:" for key, item in config.items()])+"\n"
     marker_string = "\n".join([f"   - {m}" for m in config['aruco_bc_markers']])
     yml_str = (header+body+marker_string).replace("'","")# remove '
-    with open("saved.yml",'w') as file:
+    with open(path,'w') as file:
         # doc = yaml.dump(config,file)
         file.write(yml_str)
 
